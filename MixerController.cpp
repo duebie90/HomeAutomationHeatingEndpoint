@@ -27,6 +27,7 @@ void MixerController::control_temperature(void) {
 
 void MixerController::test_relay(void){
     move_mixer(forward_long);
+    wait_ms(500);
     move_mixer(backward_long);
 }
 
@@ -35,23 +36,27 @@ void MixerController::move_mixer(MixerCommand direction){
         case forward_short:
             RELAY_FW_ON;
             wait_ms(500);
+            RELAY_FW_OFF;
             break;
         case forward_long:
             RELAY_FW_ON;
             wait_ms(1000);
+            RELAY_FW_OFF;
             break;
         case backward_short:
             RELAY_BW_ON;
             wait_ms(500);
+            RELAY_BW_OFF;
             break;
         case backward_long:
             RELAY_BW_ON;
             wait_ms(1000);
+            RELAY_BW_OFF;
             break;
 
     }
-    RELAY_BW_OFF;
-    RELAY_FW_OFF;
+
+
 }
 
 

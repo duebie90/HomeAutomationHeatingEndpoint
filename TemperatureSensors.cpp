@@ -44,17 +44,22 @@ unsigned int TemperatureSensors::read_adc_value(unsigned int sensor_number){
     //enable interrupt of first conversion memmory
     ADC12IE |= BIT0;
 
-    // start conversion
+    //enable ADC12
     ADC12CTL0 |= ENC;
 
     _delay_cycles(0xFF);
 
     __bis_SR_register(GIE);
+    // start conversion
     ADC12CTL0 |= ADC12SC;
     // wait until finished (interrupt flag)
+
     while((ADC12IFG & BIT0)==0){
         __no_operation();
     }
+
+    //disable ADC12
+    ADC12CTL0 &= ~ENC;
 
     return ADC12MEM0;
 
@@ -91,7 +96,7 @@ float TemperatureSensors::temp_from_adc_value(unsigned int adc_value){
 
 #pragma vector=ADC12_VECTOR
 __interrupt void ADC10_ISR(void){
-    __no_operation();
+    __bic_SR_register_on_exit(GIE);
 }
 
 // Port 1 interrupt service routine

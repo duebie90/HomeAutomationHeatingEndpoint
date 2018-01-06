@@ -10,7 +10,7 @@
 unsigned int esp_tcp_state_update_timer = 30;
 
 void wait_ms(const int ms) {
-	unsigned volatile int ms_counter = 0;
+    volatile uint16_t ms_counter = 0;
 	while(ms_counter < ms) {
 		//1ms delay
 		__delay_cycles(CLOCKCYCLES_ONE_MS);

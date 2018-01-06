@@ -7,6 +7,8 @@
 
 #ifndef GENERAL_H_
 #define GENERAL_H_
+#include <stdint.h>
+
 
 //CPU configuration
 #define CLOCKRATE 8000000 //8Mhz

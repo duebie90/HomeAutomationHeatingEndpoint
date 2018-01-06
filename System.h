@@ -22,7 +22,7 @@
 #define RELAY_FW_OUT	        BIT1
 #define RELAY_FW_ON	 	P6OUT |= BIT1
 #define RELAY_FW_OFF		P6OUT &= ~BIT1
-#define RELAY_FW_TOGGLE	P6OUT ^= BIT0
+#define RELAY_FW_TOGGLE	P6OUT ^= BIT1
 
 #define RELAY_BW_OUT  	    BIT2
 #define RELAY_BW_ON			P6OUT |= BIT2
