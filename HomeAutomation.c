@@ -18,6 +18,8 @@ static ESP8266_t* esp_ref = NULL;
 
 static bool registeredAtServer = false;
 
+static bool switchedState = false;
+
 //char identMessagePayload[50] = {0x00 };
 
 void homeAutomation_init(ESP8266_t* esp_ptr) {
@@ -161,24 +163,6 @@ void parseMessage(MessageType type, char payload[]) {
 	    }
 }
 
-void sendStateChangeNotification() {
-//	char notificationMessage[20] = {0x00};
-//
-//	strcat(notificationMessage, MAC);
-//
-//	notificationMessage[strlen(notificationMessage)] = PDU_DELIMITER;
-//	notificationMessage[strlen(notificationMessage)+1] = '\0';
-//
-//	char stateChar[2] = {'0',0};
-//	//if (isSwitchedOn) {
-//	if (!AC_SENSE_CHECK) {
-//		stateChar[0] = '1';
-//	}
-//	strcat(notificationMessage, stateChar);
-//
-//	sendMessage(esp_ref, MESSAGETYPE_ENDPOINT_STATE, notificationMessage);
-}
-
 
 void homeAutomation_update() {
 	//ToDo update state machine
@@ -235,5 +219,58 @@ void esp_update(ESP8266_t* esp_ptr) {
         break;
     }
 }
+
+// Preliminary this is also built in here ToDo: Remove
+void switchState(bool state) {
+    esp_tcp_state_update_timer = 0;
+//    if (state == AC_SENSE_CHECK) {
+//        //state != current state
+//        RELAY_LIGHT_TOGGLE;
+//        switchLed(4, state);
+//        switchedState = state;
+//    }
+//    wait_ms(200);
+    //wait until new state is stedy
+    //sendStateChangeNotification();
+  if (state != isSwitchedOn) {
+      if(state == true) {
+          //switch on
+          RELAY_LIGHT_ON;
+          isSwitchedOn = true;
+
+      } else {
+          //switch off
+          RELAY_LIGHT_OFF;
+          isSwitchedOn = false;
+      }
+      sendStateChangeNotification();
+  }
+}
+
+bool getSwitchState() {
+    return switchedState;
+}
+
+void sendStateChangeNotification() {
+    char notificationMessage[20] = {0x00};
+
+    strcat(notificationMessage, MAC);
+
+    notificationMessage[strlen(notificationMessage)] = PDU_DELIMITER;
+    notificationMessage[strlen(notificationMessage)+1] = '\0';
+
+    char stateChar[2] = {'0',0};
+    //if (isSwitchedOn) {
+//    if (!AC_SENSE_CHECK) {
+//        stateChar[0] = '1';
+//    }
+    if(isSwitchedOn){
+        stateChar[0] = '1';
+    }
+    strcat(notificationMessage, stateChar);
+
+    sendMessage(esp_ref, MESSAGETYPE_ENDPOINT_STATE, notificationMessage);
+}
+
 
 
