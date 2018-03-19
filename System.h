@@ -12,17 +12,19 @@
 
 //PORT 1
 #define STATUS_LED	BIT4
+#define STATUS_LED_STATE ((P1IN & BIT4) == BIT4)
+#define STATUS_LED_TOGGLE P1OUT ^= BIT4
 #define ALARM_OUT BIT5
 
 //PORT 4
-#define ESP_RST	BIT2
+#define ESP_RST	BIT3
 
 
 //Port 6
-#define RELAY_FW_OUT	        BIT1
-#define RELAY_FW_ON	 	P6OUT |= BIT1
+#define RELAY_FW_OUT	    BIT1
+#define RELAY_FW_ON	 	    P6OUT |= BIT1
 #define RELAY_FW_OFF		P6OUT &= ~BIT1
-#define RELAY_FW_TOGGLE	P6OUT ^= BIT1
+#define RELAY_FW_TOGGLE	    P6OUT ^= BIT1
 
 #define RELAY_BW_OUT  	    BIT2
 #define RELAY_BW_ON			P6OUT |= BIT2
@@ -37,6 +39,17 @@
 // HEATING  FEED LINE SENSOR ADC INPUT 3 (P6.3)
 #define HEATING_TEMP_SENSOR 3
 #define HEATING_TEMP_SENSOR_PIN BIT3
+
+// Endpoint Pins
+#define RELAY_SOCKET_OUT        BIT1
+#define RELAY_SOCKET_ON         P6OUT |= BIT1
+#define RELAY_SOCKET_OFF        P6OUT &= ~BIT1
+#define RELAY_SOCKET_TOGGLE     P6OUT ^= BIT1
+
+#define RELAY_LIGHT_OUT         BIT2
+#define RELAY_LIGHT_ON          P6OUT |= BIT2
+#define RELAY_LIGHT_OFF         P6OUT &= ~BIT2
+#define RELAY_LIGHT_TOGGLE      P6OUT ^= BIT2
 
 
 
@@ -58,6 +71,7 @@ void initUart0();
 void initUart1();
 
 void initUart115KBaud();
+void initUart38_4KBaud();
 
 void initTimer0();
 

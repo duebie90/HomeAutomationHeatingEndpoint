@@ -238,6 +238,55 @@ void initUart115KBaud() {
 	IE2 |=  URXIE1;
 }
 
+void initUart38_4KBaud() {
+    U1CTL |= SWRST;
+    U1CTL |= CHAR;
+    //enable RX and TX Module
+    ME2 |=  UTXE1 + URXE1;
+
+    //Clock source for transmit is SMCLK
+    U1TCTL = SSEL1;
+
+    //evaluated setting///////////////////////
+    //U1MCTL = 0xB5;                            //
+                                            //
+    //UBR = 833
+    /* Baud rate control register 0 */
+    //U1BR0 = 29;
+
+    /* Baud rate control register 1 */      //
+    //U1BR1 = 0;                            //
+    //////////////////////////////////////////
+    //calculated actual setting///////////////
+                                            //
+                                            //
+
+    // Somehow SMCLK seems to  be 7.705MHz
+
+    // Config for 38_4KBaud
+    //U1MCTL = 0x00;                          //
+                                            //
+    //UBR = 833
+    /* Baud rate control register 0 */
+    //U1BR0 = 0xE0; //200 decimal
+
+    /* Baud rate control register 1 */      //
+    //U1BR1 = 0;                              //
+    //////////////////////////////////////
+    //Konfig for 76800Baud
+    U1MCTL = 0x00;                          //
+    /* Baud rate control register 0 */
+    U1BR0 = 0x40; //100 decimal
+   /* Baud rate control register 1 */      //
+    U1BR1 = 0;                              //
+
+
+    /* Enable USCI */
+    U1CTL &= ~SWRST;
+
+    //enable receive interrupt
+    IE2 |=  URXIE1;
+}
 
 void initTimer0() {
 	//Select SMCLK as clk source
