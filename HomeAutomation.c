@@ -39,7 +39,7 @@ bool isRegisteredAtServer() {
 
 void sendMessage(ESP8266_t* esp_ptr, MessageType type, char* payload) {
 	//build message header around payload
-	char message[50];
+	char message[100];
 	//send message to server via TCP
 	const uint16_t payloadLength = strlen(payload);
 	message[0] = 0x01;
