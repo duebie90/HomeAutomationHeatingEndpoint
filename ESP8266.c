@@ -109,6 +109,18 @@ void wlan_set_default_mode(ESP8266_t* esp, char mode) {
 	uart_send_string(command);
 }
 
+void send_config_baudrate(int baudrate) {
+    //  //try to configure ESPs Baudrate to 9600
+        char baudrate_string[50]={0x00};
+        char buffer[5];
+        sprintf(baudrate_string, "%d", baudrate);
+        strcat(command, "AT+UART_CUR=");
+        strcat(command, baudrate_string);
+        strcat(command, "9600,8,1,0,0");
+        strcat(command, "\r\n");
+        uart_send_string(command);
+}
+
 void wlan_set_static_ip(ESP8266_t* esp, char* ip, char* gateway, char* netmask){
 	esp->activeCommand = WLAN_COMMAND_SET_STATIC_IP;
 	char command[100]={0x00};

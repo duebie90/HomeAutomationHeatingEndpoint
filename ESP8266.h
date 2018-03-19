@@ -86,6 +86,8 @@ void espSetHardReset(bool reset);
 
 bool esp_init(ESP8266_t* esp);
 
+void send_config_baudrate(int baudrate);
+
 void esp_update_tcp_state(ESP8266_t* esp_ptr);
 
 void wlan_update(ESP8266_t* esp);
