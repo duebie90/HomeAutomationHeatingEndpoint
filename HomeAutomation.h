@@ -52,9 +52,9 @@
 #define SERVER_PORT	3000
 
 
-#define MAC 			"FF:FF:FF:FF:FF:FF"
-#define DEFAULT_ALIAS 	"Spot Gallerie"
-#define TYPE			"Proto-1"
+#define MAC 			"FF:FF:FF:FF:FF:02"
+#define DEFAULT_ALIAS 	"Licht Arbeitszimmer"
+#define TYPE			"SwitchBox"
 
 void homeAutomation_init(ESP8266_t* esp_ptr);
 
