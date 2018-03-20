@@ -17,12 +17,10 @@ float TemperatureSensors::get_temp_value(int sensor_number){
     float adc_value = 0.0;
     if (sensor_number == BOILER_TEMP_SENSOR)  {
         adc_value = read_adc_value(sensor_number);
-        //ToDo: do more
-        return 0.0;
+        return temp_from_adc_value(adc_value);
     }else if (sensor_number == HEATING_TEMP_SENSOR) {
         adc_value = read_adc_value(sensor_number);
-        //ToDo: do more
-        return 0.0;
+        return temp_from_adc_value(adc_value);
     } else{
         // unknown sensor number
         return 0.0;
@@ -79,7 +77,6 @@ unsigned int TemperatureSensors::read_adc_value(unsigned int sensor_number){
 }
 
 float TemperatureSensors::temp_from_adc_value(unsigned int adc_value){
-    float r_koeff=2.5974;
     float R_PT100;
     float messspannung_temp=0;
     float temp_celsius = 0.0;
@@ -89,8 +86,12 @@ float TemperatureSensors::temp_from_adc_value(unsigned int adc_value){
     R_PT100*=(float)measure_current_pt100;
     R_PT100/=(float)sensor_gain;
     //aus RPT100 Temperatur berechnen
-    temp_celsius=(R_PT100-100.0);
-    temp_celsius*=r_koeff;
+    return temp_from_pt100_resistance(R_PT100);
+}
+
+float TemperatureSensors::temp_from_pt100_resistance(float pt100_resistance){
+    float temp_celsius=(pt100_resistance-100.0);
+    temp_celsius *= this->r_koeff;
     return temp_celsius;
 }
 
