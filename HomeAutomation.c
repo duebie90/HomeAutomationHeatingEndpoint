@@ -22,6 +22,8 @@ static bool switchedState = false;
 
 //char identMessagePayload[50] = {0x00 };
 
+int current_tcp_server = 0;
+
 void homeAutomation_init(ESP8266_t* esp_ptr) {
 	isSwitchedOn = false;
 	//save pointer on ESP structure
@@ -195,7 +197,13 @@ void esp_update(ESP8266_t* esp_ptr) {
         break;
     case WLAN_STATE_CONNECTED_AP_GOT_IP:
         wait_ms(5000);
-        wlan_connect_to_tcp_server(esp_ptr, 1,SERVER_IP, SERVER_PORT);
+        if(current_tcp_server == 1){
+            wlan_connect_to_tcp_server(esp_ptr, 1,SERVER_IP_1, SERVER_PORT);
+        }
+        else{
+                wlan_connect_to_tcp_server(esp_ptr, 1,SERVER_IP_2, SERVER_PORT);
+        }
+
         wait_ms(2000);
         if (wait_ready(esp_ptr) != WLAN_OK) {
             //eventually we also lost Wifi connection

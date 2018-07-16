@@ -92,8 +92,6 @@ void esp_update_tcp_state(ESP8266_t* esp_ptr);
 
 void wlan_update(ESP8266_t* esp);
 
-void esp_update(ESP8266_t* esp_ptr);
-
 //switch mode 1=station, 2=AccessPoint, 3=both
 void wlan_switch_mode(ESP8266_t* esp, char mode);
 //same but set permanent default value

@@ -80,7 +80,8 @@ int main(void) {
     try_connect_to_ap();
 
     //if not TCP-socket can be opened sometimes it helps to reconnect to wifi
-        wlan_connect_to_tcp_server(&esp, 1,SERVER_IP, SERVER_PORT);
+        wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
+        current_tcp_server = 1;
         wait_ms(2000);
         while(wait_ready(&esp)!=WLAN_OK) {
 
@@ -89,7 +90,8 @@ int main(void) {
 
             wait_ms(5000);
             //retry to connect to tcp-server
-            wlan_connect_to_tcp_server(&esp, 1,SERVER_IP, SERVER_PORT);
+            wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_2, SERVER_PORT);
+            current_tcp_server = 2;
             wait_ms(2000);
         }
         wait_ms(500);
@@ -104,7 +106,8 @@ int main(void) {
 
             do {
                 //try to reestablish it
-                wlan_connect_to_tcp_server(&esp, 1,SERVER_IP, SERVER_PORT);
+                wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
+                current_tcp_server = 1;
                 wait_ms(2000);
                 while(wait_ready(&esp)!=WLAN_OK) {
                     //WIFI Connection seems to be lost too
@@ -112,7 +115,8 @@ int main(void) {
 
                     wait_ms(5000);
                     //retry to connect to tcp-server
-                    wlan_connect_to_tcp_server(&esp, 1,SERVER_IP, SERVER_PORT);
+                    wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_2, SERVER_PORT);
+                    current_tcp_server = 2;
                     wait_ms(5000);
                 }
                 sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);

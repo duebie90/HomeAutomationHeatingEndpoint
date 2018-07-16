@@ -48,13 +48,23 @@
 
 //TCP Server SETUP
 //#define SERVER_IP "192.168.1.11"
-#define SERVER_IP "192.168.178.2"
+#define SERVER_IP_1 "192.168.178.2"
+//#define SERVER_IP_1 "192.168.178.21"
+//#define SERVER_IP_1 "192.168.2.111"
+#define SERVER_IP_2 "192.168.2.111"
+
+
+
+//#define SERVER_IP "192.168.2.111"
 #define SERVER_PORT	3000
 
 
 #define MAC 			"FF:FF:FF:FF:FF:02"
 #define DEFAULT_ALIAS 	"Licht Arbeitszimmer"
 #define TYPE			"SwitchBox"
+
+
+extern int current_tcp_server;
 
 void homeAutomation_init(ESP8266_t* esp_ptr);
 

@@ -192,10 +192,10 @@ void wlan_connect_to_tcp_server(ESP8266_t* esp, unsigned int type, char* addr, u
 	buffer[1] = '0' + (int)( (port % 1000) / 100);
 	buffer[2] = '0' + (int)( (port %100) / 10);
 	buffer[3] = '0' + (int)(port % 10);
-	buffer[4] = ',';
-	buffer[5] = '1000';
-	buffer[6] = 0x0D;
-	buffer[7] = 0x0A;
+	buffer[4] = 0x0D;
+	buffer[5] = 0x0A;
+	buffer[6] = 0x00;
+
 	if (port > 999) {
 		//has four digits (standard)
 
