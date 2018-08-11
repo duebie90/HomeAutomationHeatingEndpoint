@@ -72,7 +72,7 @@ void disconnectedTcp();
 
 bool isRegisteredAtServer();
 
-void sendMessage(ESP8266_t* esp_ptr, MessageType type, char* payload);
+void sendMessage(MessageType type, char* payload);
 
 void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], char type[]);
 

@@ -41,7 +41,7 @@ bool isRegisteredAtServer() {
 	return registeredAtServer;
 }
 
-void sendMessage(ESP8266_t* esp_ptr, MessageType type, char* payload) {
+void sendMessage(MessageType type, char* payload) {
 	//build message header around payload
 	char message[100];
 	//send message to server via TCP
@@ -60,7 +60,7 @@ void sendMessage(ESP8266_t* esp_ptr, MessageType type, char* payload) {
 	message[5] = 0;
 	strcat(message, payload);
 	strcat(message, termination);
-	wlan_tcp_send_string(esp_ptr, message);
+	wlan_tcp_send_string(esp_ref, message);
 }
 
 void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], char type[]) {
@@ -81,7 +81,8 @@ void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], char type[])
 
 	strcat(identMessagePayload, type);
 
-	sendMessage(esp_ptr, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
+	sendMessage(MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
+    wait_ms(50);
 }
 
 
@@ -277,7 +278,7 @@ void sendStateChangeNotification() {
     }
     strcat(notificationMessage, stateChar);
 
-    sendMessage(esp_ref, MESSAGETYPE_ENDPOINT_STATE, notificationMessage);
+    sendMessage(MESSAGETYPE_ENDPOINT_STATE, notificationMessage);
 }
 
 

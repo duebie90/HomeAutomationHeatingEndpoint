@@ -14,6 +14,8 @@
 #define STATUS_LED	BIT4
 #define STATUS_LED_STATE ((P1IN & BIT4) == BIT4)
 #define STATUS_LED_TOGGLE P1OUT ^= BIT4
+#define STATUS_LED_ON P1OUT |= BIT4
+#define STATUS_LED_OFF P1OUT &= BIT4
 #define ALARM_OUT BIT5
 
 //PORT 4
@@ -72,6 +74,7 @@ void initUart1();
 
 void initUart115KBaud();
 void initUart38_4KBaud();
+void initUart76_8Baud();
 
 void initTimer0();
 

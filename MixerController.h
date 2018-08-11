@@ -12,6 +12,7 @@
 #include "TemperatureSensors.h"
 extern "C" {
 #include "general.h"
+#include "HomeAutomation.h"
 }
 
 using std::string;
@@ -24,9 +25,11 @@ class MixerController  {
         MixerController();
         void control_temperature(void);
         void test_relay(void);
+        void send_temp_update();
     private:
-        int current_temp;
         void move_mixer(MixerCommand direction);
+        float current_temp_heating;
+        float current_temp_boiler;
         TemperatureSensors* temperatureSensors;
 
 };

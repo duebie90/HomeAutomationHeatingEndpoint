@@ -87,6 +87,78 @@ bool esp_init(ESP8266_t* esp) {
 	return true;
 }
 
+bool esp_init_baudrates(ESP8266_t* esp){
+    uart_send_string("ATE0\r\n");
+    connected_to_ap = false;
+    esp->state = WLAN_STATE_IDLE;
+    esp->activeCommand = WLAN_COMMAND_ASK_READY;
+    char reset_command[15] = {0x00};
+    char ask_ready_command[15] = {0x00};
+    strcat(reset_command, "AT+RST\r\n");
+    strcpy(ask_ready_command,"AT\r\n");
+    uart_send_string(reset_command);
+    wait_ms(5000);
+    uart_buffer_clear();
+    //wait untill ESP8266 has booted
+
+    unsigned short attempts_counter = 10;
+
+    while(attempts_counter-- > 0){
+        //ask for readyness repeatedly
+    	esp->activeCommand = WLAN_COMMAND_ASK_READY;
+        uart_send_string(ask_ready_command);
+        wait_ms(100);
+        if(wait_ready(esp)==WLAN_OK){
+            return true;
+        }
+
+        //try to communicate using the next baudrate
+        initUart38_4KBaud();
+        wait_ms(100);
+        uart_send_string(reset_command);
+        wait_ms(2000);
+        uart_buffer_clear();
+        //wait untill ESP8266 has booted
+        //ask for readyness repeatedly
+        esp->activeCommand = WLAN_COMMAND_ASK_READY;
+        uart_send_string(ask_ready_command);
+        wait_ms(100);
+        if(wait_ready(esp)==WLAN_OK){
+            return true;
+        }
+        //try to communicate using the next baudrate
+        initUart76_8Baud();
+        wait_ms(100);
+        uart_send_string(reset_command);
+        wait_ms(2000);
+        uart_buffer_clear();
+        //wait untill ESP8266 has booted
+        //ask for readyness repeatedly
+        esp->activeCommand = WLAN_COMMAND_ASK_READY;
+        uart_send_string(ask_ready_command);
+        wait_ms(100);
+        if(wait_ready(esp)==WLAN_OK){
+            return true;
+        }
+
+        //try to communicate using the next baudrate
+        initUart115KBaud();
+        wait_ms(100);
+        uart_send_string(reset_command);
+        wait_ms(2000);
+        uart_buffer_clear();
+        //wait untill ESP8266 has booted
+        //ask for readyness repeatedly
+        esp->activeCommand = WLAN_COMMAND_ASK_READY;
+        uart_send_string(ask_ready_command);
+        wait_ms(100);
+        if(wait_ready(esp)==WLAN_OK){
+            return true;
+        }
+    }
+    return false;
+}
+
 void wlan_switch_mode(ESP8266_t* esp, char mode) {
 	esp->activeCommand = WLAN_COMMAND_SWITCH_MODE;
 	//switch mode 1=station, 2=AccessPoint, 3=both
@@ -263,13 +335,14 @@ void wlan_tcp_send_string(ESP8266_t* esp_ptr, char data[]) {
 	//}
 }
 
-COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 	volatile long counter 	= 0;
+COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 	volatile long timeOut = COMMAND_TIMEOUT_COUNTER_THRESHOLD;
-	if(esp->activeCommand == WLAN_COMMAND_CONNECT_TO_TCP || esp->activeCommand == WLAN_COMMAND_JOIN_ACCESSPOINT) {
+//	if(esp->activeCommand == WLAN_COMMAND_CONNECT_TO_TCP || esp->activeCommand == WLAN_COMMAND_JOIN_ACCESSPOINT) {
 		//those command take longer
-		timeOut = 50000;//100000;
-	}
+//		timeOut = 50000;//100000;
+//	}
+	COMMAND_EXEC_RETURN exec_ret = COMMAND_TIMEOUT;
 	while ( esp->activeCommand != WLAN_COMMAND_NONE && (counter < timeOut ) ) {
 
 		switch(esp->activeCommand) {
@@ -278,21 +351,24 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(0, true);
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
 			}
 		break;
 		case WLAN_COMMAND_SWITCH_MODE:
 			if (uart_buffer_find_delete("OK")) {
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
 			}
 			break;
 		case WLAN_COMMAND_SET_STATIC_IP:
 			if (uart_buffer_find_delete("OK")) {
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
 			}
 			break;
 		case WLAN_COMMAND_JOIN_ACCESSPOINT:
@@ -306,31 +382,35 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 					esp->state = WLAN_STATE_CONNECTED_AP_GOT_IP;
 					esp->activeCommand = WLAN_COMMAND_NONE;
 					//switchLed(1, true);
-					return WLAN_OK;
+					exec_ret = WLAN_OK;
+					break;
 			}
 			if( uart_buffer_find_delete("FAIL" ) ) {
 				uart_buffer_find_delete("+CWJAP:1");
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(1, false);
-				return AP_CONNECTION_FAILURE;
+				exec_ret = AP_CONNECTION_FAILURE;
+				break;
 			}
 			if( uart_buffer_find_delete("ERROR" )  ) {
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(1, false);
-				return UNDEFINED_ERROR;
+				exec_ret = AP_CONNECTION_FAILURE;
+				break;
 			}
 			break;
 		case WLAN_COMMAND_CONNECT_TO_TCP:
 			//check for ACK
 			//if (uart_buffer_find("OK") != 0) {
-				if (uart_buffer_find_delete("CONNECT")) {
+				if (uart_buffer_find_delete("CONNECT") ) {
 					uart_buffer_find_delete("OK");
 					esp->state = WLAN_STATE_CONNECTED_TCP;
 					esp->activeCommand = WLAN_COMMAND_NONE;
 					//switchLed(2, true);
-					return WLAN_OK;
+					exec_ret = WLAN_OK;
+					break;
 				}
 			//}
 			//check for NACK
@@ -339,7 +419,8 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 				esp->state = WLAN_STATE_CONNECTED_AP_GOT_IP;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(2, false);
-				return TCP_CONNECTION_FAILURE;
+				exec_ret = TCP_CONNECTION_FAILURE;
+				break;
 			}
 			break;
 		case WLAN_COMMAND_SEND_TCP:
@@ -355,7 +436,8 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				esp->state		   = WLAN_STATE_CONNECTED_AP_GOT_IP;
 				//switchLed(2, false);
-				return TCP_CONNECTION_LOSS;
+				exec_ret = TCP_CONNECTION_LOSS;
+				break;
 			}
 			break;
 		case WLAN_COMMAND_DISCONNECT_ACCESSPOINT:
@@ -363,7 +445,8 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(1, false);
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
 			}
 			break;
 		case WLAN_COMMAND_CHECK_TCP_STATUS:
@@ -371,34 +454,32 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 				//WIFI Connected and got Ip
 				esp->state = WLAN_STATE_CONNECTED_AP_GOT_IP;
 				esp->activeCommand = WLAN_COMMAND_NONE;
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
 			} else if(uart_buffer_find_delete("STATUS:3")) {
 				//TCP connected
 				esp->state = WLAN_STATE_CONNECTED_TCP;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(2, true);
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
 			} else if(uart_buffer_find_delete("STATUS:4")) {
 				//TCP connection lost
 				esp->state = WLAN_STATE_READY;
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				//switchLed(1, false);
 				//switchLed(2, false);
-				return WLAN_OK;
+				exec_ret = WLAN_OK;
+				break;
+
 			}
 		default:
 			break;
 		}
 		counter ++;
 	}
-	if (esp->activeCommand != WLAN_COMMAND_NONE) {
-		//command execution took to long
-		esp->activeCommand = WLAN_COMMAND_NONE;
-		return  COMMAND_TIMEOUT;
-	} else {
-		//there is no command to wait for
-		return WLAN_OK;
-	}
+	counter = 0;
+	return exec_ret;
 }
 
 void wlan_update(ESP8266_t* esp) {

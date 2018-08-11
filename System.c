@@ -226,7 +226,7 @@ void initUart115KBaud() {
 												//
 	//UBR = 833
 	/* Baud rate control register 0 */
-	U1BR0 = 43;
+	U1BR0 = 40;
 
 	/* Baud rate control register 1 */		//
 	U1BR1 = 0;								//
@@ -287,6 +287,47 @@ void initUart38_4KBaud() {
     //enable receive interrupt
     IE2 |=  URXIE1;
 }
+
+void initUart76_8Baud(){
+    U1CTL |= SWRST;
+    U1CTL |= CHAR;
+    //enable RX and TX Module
+    ME2 |=  UTXE1 + URXE1;
+
+    //Clock source for transmit is SMCLK
+    U1TCTL = SSEL1;
+
+    //evaluated setting///////////////////////
+    //U1MCTL = 0xB5;                            //
+                                            //
+    //UBR = 833
+    /* Baud rate control register 0 */
+    //U1BR0 = 29;
+
+    /* Baud rate control register 1 */      //
+    //U1BR1 = 0;                            //
+    //////////////////////////////////////////
+    //calculated actual setting///////////////
+                                            //
+                                            //
+    U1MCTL = 0x03;                          //
+                                                //
+    //UBR = 833
+    /* Baud rate control register 0 */
+    U1BR0 = 61;
+
+    /* Baud rate control register 1 */      //
+    U1BR1 = 0;                              //
+
+    /* Enable USCI */
+    U1CTL &= ~SWRST;
+
+    //enable receive interrupt
+    IE2 |=  URXIE1;
+
+
+}
+
 
 void initTimer0() {
 	//Select SMCLK as clk source

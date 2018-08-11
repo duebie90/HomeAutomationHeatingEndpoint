@@ -7,7 +7,7 @@
 
 #include "general.h"
 
-unsigned int esp_tcp_state_update_timer = 30;
+unsigned int esp_tcp_state_update_timer = 70;
 
 void wait_ms(const int ms) {
     volatile uint16_t ms_counter = 0;
@@ -26,7 +26,7 @@ void fillStackWithPattern() {
 	//_stack = 0x0342;
 
 	//p = &_stack;
-	p = 0x0312;
+	p = (void*)0x0312;
 	while (p < (&__STACK_END -3))
 	{
 	    *p = 0xCAFE;

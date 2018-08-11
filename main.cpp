@@ -17,112 +17,91 @@ extern "C" {
 
 __interrupt void timerA_CCR0(void);
 bool bootedOnce = false;
-ESP8266_t esp = {.activeCommand = WLAN_COMMAND_NONE, .state = WLAN_STATE_IDLE };
+bool bootFailed = false;
+ESP8266_t esp = {WLAN_STATE_IDLE, WLAN_COMMAND_NONE};
+MixerController* mc;
 
 void try_connect_to_ap();
-
-//int main(void) {
-//    initSystem();
-//    uart_init();
-//
-//    //homeAutomation_init(&esp);
-//
-//    switchLed(true);
-//
-//    MixerController mc;
-//    //TEST OUTPUT
-//    mc.test_relay();
-//
-//
-//    mc.control_temperature();
-//    while(1){;}
-//	return 0;
-//}
-
 
 // HomeAutomation Standard-main ToDo: replace
 int main(void) {
     initSystem();
     uart_init();
-
+    //switch own Baudrate of UART1 to 9600Baud
+    initUart0();
     homeAutomation_init(&esp);
 
     //
-    MixerController mc;
+    mc = new MixerController();
     //TEST OUTPUT
-    mc.test_relay();
+    //mc->test_relay();
     //RELAY_SOCKET_ON;
-
     espSetHardReset(true);
-    wait_ms(20);
+    wait_ms(100);
     espSetHardReset(false);
-    wait_ms(2000);
+    wait_ms(500);
 
-    //  //Konfigure UART1 for 115200Baud (ESP8266 default Baudrate)
- //   while(true){
-    initUart115KBaud();
-//    wait_ms(500);
-//    send_config_baudrate(9600);
-//    wait_ms(1000);
-    //initUart38_4KBaud();
-    //wait_ms(500);
-    //send_config_baudrate(9600);
-    //wait_ms(1000);
-  //  }
-    //  switch own Baudrate of UART1 to 9600Baud again
-    //initUart0();
-
-
-    if ( !esp_init(&esp) ){
+    if ( !esp_init_baudrates(&esp) ){
             return -1;
-            //init failed
-        }
+           //init failed
+    }else{
+        uart_send_string("ATE0\r\n");
+        wait_ms(10);
+        uart_buffer_clear();
+        wlan_set_default_mode(&esp, 1);
+        uart_buffer_clear();
+        wait_ms(10);
+    }
+    uart_buffer_clear();
     try_connect_to_ap();
 
     //if not TCP-socket can be opened sometimes it helps to reconnect to wifi
-        wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
-        current_tcp_server = 1;
-        wait_ms(2000);
-        while(wait_ready(&esp)!=WLAN_OK) {
+    wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
+    current_tcp_server = 1;
+    wait_ms(200);
+    while(wait_ready(&esp)!=WLAN_OK) {
 
+            //uart_buffer_clear();
+            //try_connect_to_ap();
 
-            try_connect_to_ap();
-
-            wait_ms(5000);
+            //wait_ms(5000);
             //retry to connect to tcp-server
             wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_2, SERVER_PORT);
             current_tcp_server = 2;
+            wait_ms(200);
+    }
+    uart_buffer_clear();
+
+    //register at homeAutomation server
+    sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
+    //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
+    wait_ms(200);
+    if (wait_ready(&esp) != WLAN_OK) {
+        disconnectedTcp();
+        uart_buffer_clear();
+        //TCP sockets seems to be broken
+
+        do {
+            //try to reestablish it
+            uart_buffer_clear();
+            wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
+            current_tcp_server = 1;
             wait_ms(2000);
-        }
-        wait_ms(500);
+            while(wait_ready(&esp)!=WLAN_OK) {
+                //WIFI Connection seems to be lost too
+                try_connect_to_ap();
 
-        //register at homeAutomation server
-        sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
-        //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
-
-        if (wait_ready(&esp) != WLAN_OK) {
-            disconnectedTcp();
-            //TCP sockets seems to be broken
-
-            do {
-                //try to reestablish it
+                wait_ms(5000);
+                //retry to connect to tcp-server
                 wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
-                current_tcp_server = 1;
-                wait_ms(2000);
-                while(wait_ready(&esp)!=WLAN_OK) {
-                    //WIFI Connection seems to be lost too
-                    try_connect_to_ap();
-
-                    wait_ms(5000);
-                    //retry to connect to tcp-server
-                    wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_2, SERVER_PORT);
-                    current_tcp_server = 2;
-                    wait_ms(5000);
-                }
-                sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
-                //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
-            } while(wait_ready(&esp) == WLAN_OK);
-        }
+                current_tcp_server = 2;
+                wait_ms(5000);
+            }
+            sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
+            wait_ms(200);
+            //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
+        } while(wait_ready(&esp) == WLAN_OK);
+    }
 
         //uart_send_string("AT+UART_DEF=9600,8,1,0,0\r\n");
 
@@ -147,7 +126,7 @@ int main(void) {
 
 void try_connect_to_ap() {
     wlan_connect_to_ap(&esp, SSID, PASSWORD);
-    //wait_ms(5000);
+    wait_ms(5000);
     while(wait_ready(&esp)!=WLAN_OK) {
         //Connecting failed: try once again
         wlan_connect_to_ap(&esp, SSID, PASSWORD);
@@ -156,6 +135,13 @@ void try_connect_to_ap() {
         if (wait_ready(&esp)==WLAN_OK) {
             break;
         }
+        wlan_disconnect_from_tcp_server(&esp);
+        wait_ms(100);
+        wlan_connect_to_ap(&esp, SSID, PASSWORD);
+        wait_ms(100);
+        if (wait_ready(&esp)==WLAN_OK) {
+                    break;
+         }
         //Connecting failed: Soft-Reset ESP, wait for ACK and try again
         //switchLed(0, false);
         if ( !esp_init(&esp) ){
@@ -167,6 +153,7 @@ void try_connect_to_ap() {
         wait_ms(2000);
         //wait_ms(10000);
     }
+    uart_buffer_clear();
 }
 
 //callled ###
@@ -174,15 +161,21 @@ void try_connect_to_ap() {
 __interrupt void timerA_CCR0(void) {
     if(bootedOnce == true) {
         if (esp_tcp_state_update_timer ==0 ) {
+            mc->control_temperature();
+            mc->send_temp_update();
+
             if(esp.activeCommand == WLAN_COMMAND_NONE) {
                 sendStateChangeNotification();
                 esp.activeCommand = WLAN_COMMAND_NONE;
-                esp_tcp_state_update_timer = 30;
+                esp_tcp_state_update_timer = 70;
                        }
              } else {
                 esp_tcp_state_update_timer--;
             }
-        }else{
+       }else if(bootFailed == false){
             STATUS_LED_TOGGLE;
+        }else{
+            STATUS_LED_OFF;
         }
+
 }

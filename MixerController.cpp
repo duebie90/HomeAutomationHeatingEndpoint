@@ -8,13 +8,16 @@
  */
 
 MixerController::MixerController():
-current_temp(0) {
+current_temp_boiler(0),
+current_temp_heating(0){
     temperatureSensors = new TemperatureSensors();
 }
 
 
 void MixerController::control_temperature(void) {
-    temperatureSensors->get_temp_value((unsigned int)HEATING_TEMP_SENSOR);
+	this->current_temp_heating = temperatureSensors->get_temp_value((unsigned int)HEATING_TEMP_SENSOR);
+	this->current_temp_boiler = temperatureSensors->get_temp_value((unsigned int)BOILER_TEMP_SENSOR);
+
 
     // can be used as callback from timer ISR
         // read adc value
@@ -22,13 +25,24 @@ void MixerController::control_temperature(void) {
 
     //example
     MixerCommand command = forward_short;
-    this->move_mixer(command);
+	//this->move_mixer(command);
     }
 
 void MixerController::test_relay(void){
     move_mixer(forward_long);
     wait_ms(500);
     move_mixer(backward_long);
+}
+
+void MixerController::send_temp_update(){
+    char payload[50] = {0x00 };
+    memset(payload, 0, 50);
+    strcat(payload, MAC);
+    payload[strlen(payload)] = PDU_DELIMITER;
+    payload[strlen(payload)] = (char)this->current_temp_heating;
+    payload[strlen(payload)+1] = '\0';
+
+    sendMessage(MESSAGETYPE_ENDPOINT_SERVER_HEATING_TEMP, payload);
 }
 
 void MixerController::move_mixer(MixerCommand direction){

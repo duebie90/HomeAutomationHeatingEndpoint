@@ -20,7 +20,8 @@ float TemperatureSensors::get_temp_value(int sensor_number){
         return temp_from_adc_value(adc_value);
     }else if (sensor_number == HEATING_TEMP_SENSOR) {
         adc_value = read_adc_value(sensor_number);
-        return temp_from_adc_value(adc_value);
+        return temp;
+        float temp = temp_from_adc_value(adc_value);
     } else{
         // unknown sensor number
         return 0.0;
@@ -31,10 +32,15 @@ float TemperatureSensors::get_temp_value(int sensor_number){
 unsigned int TemperatureSensors::read_adc_value(unsigned int sensor_number){
     // select the proper input channel to store into 1st conversional memory (of 16)
     if (sensor_number == BOILER_TEMP_SENSOR){
-            ADC12MCTL0 |= BOILER_TEMP_SENSOR;
+    	//channel 4
+            ADC12MCTL0 &= ~(INCH0 + INCH1 + INCH2 + INCH3);
+            ADC12MCTL0 |=  INCH2;
     }
     else if (sensor_number == HEATING_TEMP_SENSOR)  {
-        ADC12MCTL0 |= HEATING_TEMP_SENSOR;
+		// channel 3
+    	ADC12MCTL0 &= ~(INCH0 + INCH1 + INCH2 + INCH3);
+    	ADC12MCTL0 |= INCH0 + INCH1;
+
     } else{
         //do the same
         ADC12MCTL0 |= HEATING_TEMP_SENSOR;
@@ -79,13 +85,14 @@ unsigned int TemperatureSensors::read_adc_value(unsigned int sensor_number){
 float TemperatureSensors::temp_from_adc_value(unsigned int adc_value){
     float R_PT100;
     float messspannung_temp=0;
-    float temp_celsius = 0.0;
-    messspannung_temp=(float)adc_value/317;//Spannungswert aus ADC Wert ausrechnen Referenzspannung 3,23V
+    messspannung_temp=(float)adc_value/1638.4;//Spannungswert aus ADC Wert ausrechnen Referenzspannung 3,23V
     //Via Messspannung R_PT100 berechnenb
-    R_PT100=messspannung_temp;
-    R_PT100*=(float)measure_current_pt100;
-    R_PT100/=(float)sensor_gain;
-    //aus RPT100 Temperatur berechnen
+    //1. von der Messspannung zur Sensorspannung (Differenz OPV)
+    messspannung_temp = u_ref*V_uref - messspannung_temp;
+    messspannung_temp /= V_pt100;
+    //2. Zum Widerstand des PT100
+    R_PT100 = messspannung_temp/ measure_current_pt100;
+    //3. aus RPT100 Temperatur berechnen
     return temp_from_pt100_resistance(R_PT100);
 }
 
