@@ -83,6 +83,8 @@ int main(void) {
 
         do {
             //try to reestablish it
+        	wlan_disconnect_from_tcp_server(&esp);
+			wait_ms(1000);
             uart_buffer_clear();
             wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
             current_tcp_server = 1;
@@ -100,7 +102,7 @@ int main(void) {
             sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
             wait_ms(200);
             //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
-        } while(wait_ready(&esp) == WLAN_OK);
+        } while(wait_ready(&esp) != WLAN_OK);
     }
 
         //uart_send_string("AT+UART_DEF=9600,8,1,0,0\r\n");
@@ -163,14 +165,15 @@ __interrupt void timerA_CCR0(void) {
         if (esp_tcp_state_update_timer ==0 ) {
             mc->control_temperature();
             mc->send_temp_update();
-
-            if(esp.activeCommand == WLAN_COMMAND_NONE) {
-                sendStateChangeNotification();
-                esp.activeCommand = WLAN_COMMAND_NONE;
-                esp_tcp_state_update_timer = 70;
-                       }
-             } else {
-                esp_tcp_state_update_timer--;
+            //wait_ready(&esp);
+            wait_ms(10);
+            esp.activeCommand = WLAN_COMMAND_NONE;
+            sendStateChangeNotification();
+            wait_ms(1);
+            esp.activeCommand = WLAN_COMMAND_NONE;
+            esp_tcp_state_update_timer = 35;
+            }else{
+            	esp_tcp_state_update_timer--;
             }
        }else if(bootFailed == false){
             STATUS_LED_TOGGLE;
