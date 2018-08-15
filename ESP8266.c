@@ -404,7 +404,14 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 		case WLAN_COMMAND_CONNECT_TO_TCP:
 			//check for ACK
 			//if (uart_buffer_find("OK") != 0) {
-				if (uart_buffer_find_delete("CONNECT") ) {
+			if (uart_buffer_find_delete("ALREADY CONNECTED") ) {
+				esp->state = WLAN_STATE_CONNECTED_TCP;
+									esp->activeCommand = WLAN_COMMAND_NONE;
+									//switchLed(2, true);
+									exec_ret = WLAN_OK;
+									break;
+			}
+			if (uart_buffer_find_delete("CONNECT") ) {
 					uart_buffer_find_delete("OK");
 					esp->state = WLAN_STATE_CONNECTED_TCP;
 					esp->activeCommand = WLAN_COMMAND_NONE;
