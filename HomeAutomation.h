@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include "ESP8266.h"
 #include "messagetype.h"
+#include "endpointtypes.h"
 #include "System.h"
 #include "uart.h"
 #include "general.h"
@@ -61,7 +62,7 @@
 
 #define MAC 			"FF:FF:FF:FF:FF:02"
 #define DEFAULT_ALIAS 	"Licht Arbeitszimmer"
-#define TYPE			"SwitchBox"
+#define TYPE			ENDPOINT_TYPE_HEATING//"SwitchBox"
 
 
 extern int current_tcp_server;
@@ -74,7 +75,7 @@ bool isRegisteredAtServer();
 
 void sendMessage(MessageType type, char* payload);
 
-void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], char type[]);
+void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], EndpointTypes type);
 
 
 void sendStateChangeNotification();

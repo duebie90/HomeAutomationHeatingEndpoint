@@ -61,12 +61,12 @@ int main(void) {
     wait_ms(200);
     while(wait_ready(&esp)!=WLAN_OK) {
 
-            //uart_buffer_clear();
+            uart_buffer_clear();
             //try_connect_to_ap();
 
             //wait_ms(5000);
             //retry to connect to tcp-server
-            wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_2, SERVER_PORT);
+            wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
             current_tcp_server = 2;
             wait_ms(200);
     }

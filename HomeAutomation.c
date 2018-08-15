@@ -63,7 +63,7 @@ void sendMessage(MessageType type, char* payload) {
 	wlan_tcp_send_string(esp_ref, message);
 }
 
-void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], char type[]) {
+void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], EndpointTypes type) {
 	char identMessagePayload[50] = {0x00 };
 
 	memset(identMessagePayload, 0, 50);
@@ -79,7 +79,8 @@ void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], char type[])
 	identMessagePayload[strlen(identMessagePayload)] = PDU_DELIMITER;
 	identMessagePayload[strlen(identMessagePayload)+1] = '\0';
 
-	strcat(identMessagePayload, type);
+	identMessagePayload[strlen(identMessagePayload)] = (char)type;
+	identMessagePayload[strlen(identMessagePayload)+1] = '\0';
 
 	sendMessage(MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
     wait_ms(50);
