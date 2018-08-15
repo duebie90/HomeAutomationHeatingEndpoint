@@ -116,7 +116,7 @@ bool esp_init_baudrates(ESP8266_t* esp){
         initUart38_4KBaud();
         wait_ms(100);
         uart_send_string(reset_command);
-        wait_ms(2000);
+        wait_ms(1000);
         uart_buffer_clear();
         //wait untill ESP8266 has booted
         //ask for readyness repeatedly
@@ -130,7 +130,7 @@ bool esp_init_baudrates(ESP8266_t* esp){
         initUart76_8Baud();
         wait_ms(100);
         uart_send_string(reset_command);
-        wait_ms(2000);
+        wait_ms(1000);
         uart_buffer_clear();
         //wait untill ESP8266 has booted
         //ask for readyness repeatedly
@@ -145,7 +145,7 @@ bool esp_init_baudrates(ESP8266_t* esp){
         initUart115KBaud();
         wait_ms(100);
         uart_send_string(reset_command);
-        wait_ms(2000);
+        wait_ms(1000);
         uart_buffer_clear();
         //wait untill ESP8266 has booted
         //ask for readyness repeatedly
