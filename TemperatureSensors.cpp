@@ -20,8 +20,8 @@ float TemperatureSensors::get_temp_value(int sensor_number){
         return temp_from_adc_value(adc_value);
     }else if (sensor_number == HEATING_TEMP_SENSOR) {
         adc_value = read_adc_value(sensor_number);
-        return temp;
         float temp = temp_from_adc_value(adc_value);
+        return temp;
     } else{
         // unknown sensor number
         return 0.0;
