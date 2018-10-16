@@ -1,7 +1,9 @@
 #ifndef ENDPOINTTYPES_H
 #define ENDPOINTTYPES_H
-enum EndpointTypes:unsigned int{
+
+typedef enum {
     ENDPOINT_TYPE_SWITCHBOX=0x21,
     ENDPOINT_TYPE_HEATING=0x22
-};
+}EndpointTypes;
+
 #endif // ENDPOINTTYPES_H

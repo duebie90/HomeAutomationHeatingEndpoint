@@ -97,7 +97,7 @@ bool esp_init_baudrates(ESP8266_t* esp){
     strcat(reset_command, "AT+RST\r\n");
     strcpy(ask_ready_command,"AT\r\n");
     uart_send_string(reset_command);
-    wait_ms(5000);
+    wait_ms(1000);
     uart_buffer_clear();
     //wait untill ESP8266 has booted
 

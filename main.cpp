@@ -54,13 +54,13 @@ int main(void) {
     }
     uart_buffer_clear();
     try_connect_to_ap();
-
+    bootedOnce = true;
     //if not TCP-socket can be opened sometimes it helps to reconnect to wifi
     wlan_connect_to_tcp_server(&esp, 1,SERVER_IP_1, SERVER_PORT);
     current_tcp_server = 1;
     wait_ms(200);
     while(wait_ready(&esp)!=WLAN_OK) {
-
+    		bootedOnce = false;
             uart_buffer_clear();
             //try_connect_to_ap();
 
@@ -75,8 +75,9 @@ int main(void) {
     //register at homeAutomation server
     sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
     //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
-    wait_ms(200);
+    wait_ms(1000);
     if (wait_ready(&esp) != WLAN_OK) {
+    	bootedOnce = false;
         disconnectedTcp();
         uart_buffer_clear();
         //TCP sockets seems to be broken
@@ -99,8 +100,10 @@ int main(void) {
                 current_tcp_server = 2;
                 wait_ms(5000);
             }
+            uart_buffer_clear();
+            bootedOnce = true;
             sendIdentMessage(&esp, DEFAULT_ALIAS, MAC, TYPE);
-            wait_ms(200);
+            wait_ms(1000);
             //sendMessage(&esp, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
         } while(wait_ready(&esp) != WLAN_OK);
     }
@@ -161,7 +164,7 @@ void try_connect_to_ap() {
 //callled ###
 #pragma vector=TIMERA0_VECTOR
 __interrupt void timerA_CCR0(void) {
-    if(bootedOnce == true) {
+    if(bootedOnce == true && esp.state == WLAN_STATE_CONNECTED_TCP) {
         if (esp_tcp_state_update_timer ==0 ) {
             mc->control_temperature();
             mc->send_temp_update();
@@ -169,6 +172,12 @@ __interrupt void timerA_CCR0(void) {
             wait_ms(10);
             esp.activeCommand = WLAN_COMMAND_NONE;
             sendStateChangeNotification();
+            if(wait_ready(&esp)!=WLAN_OK) {
+            	bootedOnce = false;
+            	disconnectedTcp();
+            	uart_buffer_clear();
+            	esp.state = WLAN_STATE_CONNECTED_TCP;
+            }
             wait_ms(1);
             esp.activeCommand = WLAN_COMMAND_NONE;
             esp_tcp_state_update_timer = 35;

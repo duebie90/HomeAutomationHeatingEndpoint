@@ -8,7 +8,7 @@
 //author: Manuel du Bois
 //
 //Defines Methods for communication via UART with HC-05 Bluetooth device
-#define UART_BUFFER_MAX_SIZE 3
+#define UART_BUFFER_MAX_SIZE 5
 #define UART_BUFFER_MAX_STRINGLENGTH 50
 
 //UART
