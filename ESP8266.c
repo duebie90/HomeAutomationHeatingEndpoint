@@ -5,6 +5,7 @@
  *      Author: admin
  */
 #include "ESP8266.h"
+#include <stdbool.h>
 
 #define COMMAND_TIMEOUT_COUNTER_THRESHOLD 40000//80000
 
@@ -12,6 +13,9 @@ bool connected_to_ap = false;
 
 unsigned int tcp_reconnect_counter = 0;
 char command[50]={0x00};
+
+unsigned int wlanSendBufferLength = 0;
+char wlanSendBuffer[WLAN_BUFFER_MAX_SIZE][WLAN_BUFFER_MAX_STRINGLENGTH] = {0x00};
 
 void espSetHardReset(bool reset) {
 	if (reset == false) {
@@ -404,21 +408,13 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 		case WLAN_COMMAND_CONNECT_TO_TCP:
 			//check for ACK
 			//if (uart_buffer_find("OK") != 0) {
-			if (uart_buffer_find_delete("ALREADY CONNECTED") ) {
+			if (uart_buffer_find_delete("ALREADY CONNECTED") || uart_buffer_find_delete("CONNECT") || uart_buffer_find_delete("CONNECTED")) {
 				esp->state = WLAN_STATE_CONNECTED_TCP;
-									esp->activeCommand = WLAN_COMMAND_NONE;
-									//switchLed(2, true);
-									exec_ret = WLAN_OK;
-									break;
+			    esp->activeCommand = WLAN_COMMAND_NONE;
+				//switchLed(2, true);
+				exec_ret = WLAN_OK;
+				break;
 			}
-			if (uart_buffer_find_delete("CONNECT") ) {
-					uart_buffer_find_delete("OK");
-					esp->state = WLAN_STATE_CONNECTED_TCP;
-					esp->activeCommand = WLAN_COMMAND_NONE;
-					//switchLed(2, true);
-					exec_ret = WLAN_OK;
-					break;
-				}
 			//}
 			//check for NACK
 			if (uart_buffer_find_delete("ERROR")) {
@@ -431,12 +427,14 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 			}
 			break;
 		case WLAN_COMMAND_SEND_TCP:
-			if (uart_buffer_find_delete("SEND OK")) {
+			// Hack/ Try: Ignore cases without feedback after message
+			//exec_ret = WLAN_OK;
+			if (uart_buffer_find_delete("SEND OK") || uart_buffer_find_delete("OK")) {
 				uart_buffer_find_delete("Recv");
 				uart_buffer_find_delete("SEND OK");
 				esp->activeCommand = WLAN_COMMAND_NONE;
 				esp->state		   = WLAN_STATE_CONNECTED_TCP;
-				return WLAN_OK;
+				exec_ret =  WLAN_OK;
 			}
 			if (uart_buffer_find_delete("link")) {
 				uart_buffer_find_delete("ERROR");
@@ -444,7 +442,6 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 				esp->state		   = WLAN_STATE_CONNECTED_AP_GOT_IP;
 				//switchLed(2, false);
 				exec_ret = TCP_CONNECTION_LOSS;
-				break;
 			}
 			break;
 		case WLAN_COMMAND_DISCONNECT_ACCESSPOINT:
@@ -490,7 +487,6 @@ COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp) {
 }
 
 void wlan_update(ESP8266_t* esp) {
-	//ToDo check
 	//if connection to AP was lost 	OR recovered
 	//if TCP Connection was lost	OR recovered
 	if (uart_buffer_find_delete("WIFI CONNECTED")) {
@@ -525,10 +521,32 @@ void wlan_update(ESP8266_t* esp) {
 		//switchLed(2, false);
 
 	}
+	//go through send buffer and send message via uart
+	processSendBuffer(esp);
 
-	//ToDo check for other command returns
-	//occasionally reset active command
 }
+
+void processSendBuffer(ESP8266_t* esp){
+	int i = 0;
+	for(i=wlanSendBufferLength; i>0; i--){
+		wlan_tcp_send_string(esp, wlanSendBuffer[i-1]);
+		wait_ms(200);
+		if(wait_ready(esp) != WLAN_OK) {
+			disconnectedTcp();
+			return;
+		}
+		wlanSendBufferLength --;
+	}
+}
+
+void enqueueTcpMessage(char* message){
+	memcpy(wlanSendBuffer[wlanSendBufferLength], message, strlen(message));
+	wlanSendBufferLength++;
+	if(wlanSendBufferLength >= WLAN_BUFFER_MAX_SIZE) {
+		wlanSendBufferLength=0;
+	}
+}
+
 
 void esp_update_tcp_state(ESP8266_t* esp_ptr) {
 	char command[15]={0x00};

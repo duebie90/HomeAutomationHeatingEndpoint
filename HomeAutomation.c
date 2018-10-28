@@ -6,6 +6,7 @@
  *      Specific functions to communicate with HomeAutomationServer are provided
  */
 #include "HomeAutomation.h"
+#include <stdbool.h>
 
 
 const static char termination[5] = {0x03, 0x04, 0x0D, 0x0A, 0x00};
@@ -24,6 +25,9 @@ static bool switchedState = false;
 
 int current_tcp_server = 0;
 
+
+char reIdentCounter = 10;
+
 void homeAutomation_init(ESP8266_t* esp_ptr) {
 	isSwitchedOn = false;
 	//save pointer on ESP structure
@@ -41,7 +45,7 @@ bool isRegisteredAtServer() {
 	return registeredAtServer;
 }
 
-void sendMessage(MessageType type, char* payload) {
+void sendMessage(MessageType type, char* payload, bool send_buffered) {
 	//build message header around payload
 	char message[100];
 	//send message to server via TCP
@@ -60,11 +64,15 @@ void sendMessage(MessageType type, char* payload) {
 	message[5] = 0;
 	strcat(message, payload);
 	strcat(message, termination);
-	wlan_tcp_send_string(esp_ref, message);
+	if(send_buffered){
+		enqueueTcpMessage(message);
+	}else{
+		wlan_tcp_send_string(esp_ref, message);
+	}
 }
 
-void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], EndpointTypes type) {
 	char identMessagePayload[50] = {0x00 };
+void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], EndpointTypes type) {
 
 	memset(identMessagePayload, 0, 50);
 	identMessagePayload[0] = 0x00;
@@ -82,7 +90,7 @@ void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], EndpointType
 	identMessagePayload[strlen(identMessagePayload)] = (char)type;
 	identMessagePayload[strlen(identMessagePayload)+1] = '\0';
 
-	sendMessage(MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
+	sendMessage(MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload, false);
     wait_ms(50);
 }
 
@@ -144,6 +152,7 @@ void parseMessage(MessageType type, char payload[]) {
 	    	char* mac = strtok(payloadCopy, payloadInnerDelimiter);
 	    	if( strstr(mac, MAC )!=NULL && mac != NULL)  {
 	    		registeredAtServer = true;
+	    		reIdentCounter = 10;
 	    		//switchLed(3, true);
 	    	}
 	    }
@@ -214,6 +223,13 @@ void esp_update(ESP8266_t* esp_ptr) {
         break;
     case WLAN_STATE_CONNECTED_TCP:
         if (isRegisteredAtServer() == false) {
+        	if(reIdentCounter <= 0){
+        		esp_ptr->state = WLAN_STATE_CONNECTED_AP_GOT_IP;
+        	}else{
+        		//sometimes identification goes wrong even though ESP says the message has been sent
+        		reIdentCounter--;
+        	}
+
              sendIdentMessage(esp_ptr, DEFAULT_ALIAS, MAC, TYPE);
              //sendMessage(esp_ptr, MESSAGETYPE_ENDPOINT_IDENT, identMessagePayload);
 
@@ -222,7 +238,7 @@ void esp_update(ESP8266_t* esp_ptr) {
                 //switchLed(2, false);
             }
             //ToDo: The message was successfully sent, now go asleep for a certain time and retry if still no response
-            wait_ms(1000);
+		//wait_ms(1000);
         }
         break;
     default:
@@ -253,7 +269,7 @@ void switchState(bool state) {
           RELAY_LIGHT_OFF;
           isSwitchedOn = false;
       }
-      sendStateChangeNotification();
+      sendStateChangeNotification(false);
   }
 }
 
@@ -261,7 +277,7 @@ bool getSwitchState() {
     return switchedState;
 }
 
-void sendStateChangeNotification() {
+void sendStateChangeNotification(bool send_buffered) {
     char notificationMessage[20] = {0x00};
 
     strcat(notificationMessage, MAC);
@@ -279,7 +295,7 @@ void sendStateChangeNotification() {
     }
     strcat(notificationMessage, stateChar);
 
-    sendMessage(MESSAGETYPE_ENDPOINT_STATE, notificationMessage);
+    sendMessage(MESSAGETYPE_ENDPOINT_STATE, notificationMessage, send_buffered);
 }
 
 

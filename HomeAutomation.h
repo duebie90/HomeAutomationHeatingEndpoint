@@ -49,8 +49,8 @@
 
 //TCP Server SETUP
 //#define SERVER_IP "192.168.1.11"
-#define SERVER_IP_1 "192.168.178.2"
-//#define SERVER_IP_1 "192.168.178.21"
+//#define SERVER_IP_1 "192.168.178.2"
+#define SERVER_IP_1 "192.168.178.21"
 //#define SERVER_IP_1 "192.168.2.111"
 #define SERVER_IP_2 "192.168.2.111"
 
@@ -73,12 +73,12 @@ void disconnectedTcp();
 
 bool isRegisteredAtServer();
 
-void sendMessage(MessageType type, char* payload);
+void sendMessage(MessageType type, char* payload, bool send_buffered);
 
 void sendIdentMessage(ESP8266_t* esp_ptr, char alias[], char mac[], EndpointTypes type);
 
 
-void sendStateChangeNotification();
+void sendStateChangeNotification(bool send_buffered);
 
 void parseReceivedData(char* received);
 

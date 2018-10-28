@@ -25,6 +25,9 @@
 
 #define MAX_SSID_LENGTH 20
 
+//Defines Methods for communication via UART with HC-05 Bluetooth device
+#define WLAN_BUFFER_MAX_SIZE 5
+#define WLAN_BUFFER_MAX_STRINGLENGTH 50
 
 typedef enum {
 	WLAN_COMMAND_NONE = 0x00,
@@ -94,6 +97,10 @@ void esp_update_tcp_state(ESP8266_t* esp_ptr);
 
 void wlan_update(ESP8266_t* esp);
 
+void processSendBuffer(ESP8266_t* esp);
+
+void enqueueTcpMessage(char*);
+
 //switch mode 1=station, 2=AccessPoint, 3=both
 void wlan_switch_mode(ESP8266_t* esp, char mode);
 //same but set permanent default value
@@ -121,6 +128,8 @@ void wlan_tcp_send_string(ESP8266_t* esp, char data[]);
 //it will return != 0 if an error occured
 COMMAND_EXEC_RETURN wait_ready(ESP8266_t* esp8266);
 
+extern unsigned int wlanSendBufferLength;
+extern char wlanSendBuffer[WLAN_BUFFER_MAX_SIZE][WLAN_BUFFER_MAX_STRINGLENGTH];
 
 
 

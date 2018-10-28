@@ -7,7 +7,7 @@
 
 #include "general.h"
 
-unsigned int esp_tcp_state_update_timer = 70;
+unsigned int esp_tcp_state_update_timer = 2;
 
 void wait_ms(const int ms) {
     volatile uint16_t ms_counter = 0;

@@ -42,7 +42,7 @@ void MixerController::send_temp_update(){
     payload[strlen(payload)] = (char)this->current_temp_heating;
     payload[strlen(payload)+1] = '\0';
 
-    sendMessage(MESSAGETYPE_ENDPOINT_SERVER_HEATING_TEMP, payload);
+    sendMessage(MESSAGETYPE_ENDPOINT_SERVER_HEATING_TEMP, payload, true);
 }
 
 void MixerController::move_mixer(MixerCommand direction){
