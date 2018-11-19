@@ -90,6 +90,7 @@ float TemperatureSensors::temp_from_adc_value(unsigned int adc_value){
     //1. von der Messspannung zur Sensorspannung (Differenz OPV)
     messspannung_temp = u_ref*V_uref - messspannung_temp;
     messspannung_temp /= V_pt100;
+    messspannung_temp -= offset_v_mess;
     //2. Zum Widerstand des PT100
     R_PT100 = messspannung_temp/ measure_current_pt100;
     //3. aus RPT100 Temperatur berechnen

@@ -30,6 +30,7 @@ private:
     const float V_uref = 49.5294;
     const float V_pt100 = 48.5294;
     const float r_koeff=2.5974;
+    const float offset_v_mess = 0.0203; // difference though signal follow opv (first stage)
 
 };
 
