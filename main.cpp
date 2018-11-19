@@ -23,6 +23,10 @@ MixerController* mc;
 
 void try_connect_to_ap();
 
+extern "C" void proxy_set_target_influx_mixer_controller(float target_temp){
+	mc->set_target_temp(target_temp);
+}
+
 // HomeAutomation Standard-main ToDo: replace
 int main(void) {
 	initSystem();
@@ -33,6 +37,11 @@ int main(void) {
 
 	//
 	mc = new MixerController();
+
+	//callback_target_influx_temp_received = &mc->set_target_temp;
+	set_callback_target_influx_temp(proxy_set_target_influx_mixer_controller);
+
+
 	//TEST OUTPUT
 	//mc->test_relay();
 	//RELAY_SOCKET_ON;
@@ -123,6 +132,7 @@ int main(void) {
 			parseReceivedData(ipd_data);
 		}
 		homeAutomation_update();
+		mc->control_temperature();
 
 	}
 
@@ -167,7 +177,7 @@ __interrupt void timerA_CCR0(void) {
 	if (isRegisteredAtServer() == true
 			&& esp.state == WLAN_STATE_CONNECTED_TCP) {
 		if (esp_tcp_state_update_timer == 0) {
-			mc->control_temperature();
+			mc->update_temperatures();
 			mc->send_temp_update();
 			//wait_ready(&esp);
 			sendStateChangeNotification(true);

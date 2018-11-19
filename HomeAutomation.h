@@ -94,6 +94,8 @@ bool getSwitchState();
 
 void esp_update(ESP8266_t* esp_ptr);
 
+void set_callback_target_influx_temp(void (*callback_fun)(float));
+
 extern char identMessagePayload[50];
 
 #endif /* SRC_HOMEAUTOMATION_H_ */

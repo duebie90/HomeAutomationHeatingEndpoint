@@ -25,8 +25,9 @@ static bool switchedState = false;
 
 int current_tcp_server = 0;
 
-
 char reIdentCounter = 10;
+
+void (*callback_target_influx_temp_received)(float) = NULL;
 
 void homeAutomation_init(ESP8266_t* esp_ptr) {
 	isSwitchedOn = false;
@@ -170,6 +171,13 @@ void parseMessage(MessageType type, char payload[]) {
 	            }
 	        }
 	    }
+	    case MESSAGETYPE_SERVER_ENDPOINT_TARGET_INFLUX_TEMP:{
+	    	char * mac     =   strtok(payloadCopy, payloadInnerDelimiter);
+	    	char * target_influx_temp_c = strtok(payloadCopy, payloadInnerDelimiter);
+	    	float target_influx_i = (float)(int)target_influx_temp_c;
+	    	//callback_target_influx_temp_received((float)target_influx_temp);
+	    	callback_target_influx_temp_received(target_influx_i);
+	    }
 	        break;
 	    default:
 	        break;
@@ -298,5 +306,7 @@ void sendStateChangeNotification(bool send_buffered) {
     sendMessage(MESSAGETYPE_ENDPOINT_STATE, notificationMessage, send_buffered);
 }
 
-
+void set_callback_target_influx_temp(void (*callback_fun)(float)){
+	callback_target_influx_temp_received = callback_fun;
+}
 
